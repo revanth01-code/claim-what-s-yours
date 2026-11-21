@@ -1,0 +1,74 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.egg-info/
+dist/
+
+# FastAPI / application configuration
+.env
+.env.*
+!.env.example
+instance/
+*.sqlite3
+*.db
+
+# PostgreSQL
+pgdata/
+*.dump
+*.backup
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+ios/Pods/
+macos/Pods/
+
+# Android
+*.jks
+*.keystore
+key.properties
+local.properties
+*.iml
+.gradle/
+.idea/
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+*.code-workspace
+
+# Logs and reports
+*.log
+logs/
+test-results/
+
+# Secrets and credentials
+secrets/
+credentials/
+*.pem
+*.key
+
+# Operating systems
+.DS_Store
+Thumbs.db
+desktop.ini
+
