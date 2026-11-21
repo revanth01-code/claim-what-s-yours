@@ -1,6 +1,7 @@
 """Application settings loaded from environment variables prefixed with CWY_."""
 
 import json
+import os
 from functools import lru_cache
 from typing import Literal
 
@@ -47,4 +48,5 @@ class Settings(BaseSettings):
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     """Return the cached application settings."""
-    return Settings()
+    env_file = None if os.getenv("CWY_ENVIRONMENT") == "testing" else ".env"
+    return Settings(_env_file=env_file)

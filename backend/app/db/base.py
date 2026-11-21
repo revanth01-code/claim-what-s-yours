@@ -1,4 +1,4 @@
-"""Declarative base for SQLAlchemy models. No models are defined here yet."""
+"""Declarative base and shared SQLAlchemy model imports."""
 
 from sqlalchemy.orm import DeclarativeBase
 

@@ -22,10 +22,14 @@ def get_engine() -> Engine:
     if settings.database_url is None:
         raise DatabaseNotConfiguredError()
     database_url = settings.database_url.get_secret_value()
+    engine_options: dict[str, object] = {"pool_pre_ping": True}
+    if database_url.startswith("postgresql"):
+        engine_options["connect_args"] = {
+            "connect_timeout": settings.database_connect_timeout_seconds
+        }
     return create_engine(
         database_url,
-        pool_pre_ping=True,
-        connect_args={"connect_timeout": settings.database_connect_timeout_seconds},
+        **engine_options,
     )
 
 
