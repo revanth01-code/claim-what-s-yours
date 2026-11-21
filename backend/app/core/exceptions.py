@@ -25,6 +25,36 @@ class DatabaseUnavailableError(RuntimeError):
         super().__init__("Database is unavailable.")
 
 
+class AuthenticationError(RuntimeError):
+    """Raised when a request carries missing, invalid or expired credentials (401)."""
+
+    status_code = 401
+    error_code = "authentication_failed"
+
+    def __init__(self, message: str = "Authentication failed.") -> None:
+        super().__init__(message)
+
+
+class AccountDisabledError(RuntimeError):
+    """Raised when a valid identity maps to a disabled account (403)."""
+
+    status_code = 403
+    error_code = "account_disabled"
+
+    def __init__(self) -> None:
+        super().__init__("Account is disabled.")
+
+
+class AuthServiceUnavailableError(RuntimeError):
+    """Raised when the identity provider cannot be reached or verified (503)."""
+
+    status_code = 503
+    error_code = "auth_service_unavailable"
+
+    def __init__(self) -> None:
+        super().__init__("Authentication service is temporarily unavailable.")
+
+
 def _error_body(code: str, message: str) -> dict[str, Any]:
     """Build the standard error payload."""
     return {"error": {"code": code, "message": message}}
@@ -38,6 +68,7 @@ async def _http_exception_handler(
     return JSONResponse(
         status_code=exc.status_code,
         content=_error_body("http_error", message),
+        headers=exc.headers,
     )
 
 
@@ -79,6 +110,38 @@ async def _database_unavailable_handler(
     )
 
 
+async def _authentication_error_handler(
+    request: Request, exc: AuthenticationError
+) -> JSONResponse:
+    """Map authentication failures to a 401 response with a Bearer challenge."""
+    del request
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=_error_body(exc.error_code, str(exc)),
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+async def _account_disabled_handler(request: Request, exc: AccountDisabledError) -> JSONResponse:
+    """Map disabled accounts to a stable 403 response."""
+    del request
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=_error_body(exc.error_code, str(exc)),
+    )
+
+
+async def _auth_service_unavailable_handler(
+    request: Request, exc: AuthServiceUnavailableError
+) -> JSONResponse:
+    """Map identity provider outages to a stable 503 response."""
+    del request
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=_error_body(exc.error_code, str(exc)),
+    )
+
+
 async def _unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Log the traceback server-side and return a generic 500 payload."""
     logger.exception("Unhandled exception while processing request")
@@ -99,5 +162,11 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(
         DatabaseUnavailableError,
         _database_unavailable_handler,
+    )
+    app.add_exception_handler(AuthenticationError, _authentication_error_handler)
+    app.add_exception_handler(AccountDisabledError, _account_disabled_handler)
+    app.add_exception_handler(
+        AuthServiceUnavailableError,
+        _auth_service_unavailable_handler,
     )
     app.add_exception_handler(Exception, _unhandled_exception_handler)

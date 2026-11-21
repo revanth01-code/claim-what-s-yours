@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     # Use the cors_origins_list property to get the parsed list.
     cors_allowed_origins: str = ""
     database_connect_timeout_seconds: int = Field(default=3, ge=1)
+    # Firebase Authentication settings. The service-account file path is local
+    # configuration only; never commit the credentials file itself.
+    firebase_project_id: str | None = None
+    firebase_credentials_path: str | None = None
 
     @field_validator("api_prefix")
     @classmethod

@@ -15,6 +15,7 @@ from app.modules.scholarships import (
     ScholarshipAcademicYear,
     ScholarshipSource,
 )
+from app.modules.users.models import User
 
 config = context.config
 
@@ -48,8 +49,26 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations with a live SQLAlchemy connection."""
+    """Run migrations with a live SQLAlchemy connection.
+
+    A caller may supply an open connection via config.attributes["connection"] (the test
+    suite does this to target an isolated PostgreSQL schema). In that case no engine is
+    created or disposed here; the caller owns the connection's lifecycle.
+    """
     from sqlalchemy import create_engine
+
+    external_connection = config.attributes.get("connection")
+    if external_connection is not None:
+        context.configure(
+            connection=external_connection,
+            target_metadata=target_metadata,
+            compare_type=True,
+            compare_server_default=True,
+        )
+
+        with context.begin_transaction():
+            context.run_migrations()
+        return
 
     database_url = get_database_url()
     engine_options: dict[str, object] = {"pool_pre_ping": True}
