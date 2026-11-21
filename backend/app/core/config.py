@@ -1,0 +1,50 @@
+"""Application settings loaded from environment variables prefixed with CWY_."""
+
+import json
+from functools import lru_cache
+from typing import Literal
+
+from pydantic import Field, SecretStr, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """Runtime settings. Values come from the environment or a local .env file."""
+
+    model_config = SettingsConfigDict(env_file=".env", env_prefix="CWY_", extra="ignore")
+
+    app_name: str = "Claim What's Yours API"
+    environment: Literal["development", "testing", "production"] = "development"
+    api_prefix: str = "/api/v1"
+    database_url: SecretStr | None = None
+    # Stored as a raw string so comma-separated values parse on pydantic-settings>=2.4.
+    # Use the cors_origins_list property to get the parsed list.
+    cors_allowed_origins: str = ""
+    database_connect_timeout_seconds: int = Field(default=3, ge=1)
+
+    @field_validator("api_prefix")
+    @classmethod
+    def _validate_api_prefix(cls, value: str) -> str:
+        """Require a leading slash and no trailing slash (and not just '/')."""
+        if not value.startswith("/") or value == "/" or value.endswith("/"):
+            raise ValueError("api_prefix must start with '/' and must not end with '/'.")
+        return value
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Return allowed origins from a JSON list string or a comma-separated string."""
+        raw = self.cors_allowed_origins.strip()
+        if not raw:
+            return []
+        if raw.startswith("["):
+            parsed = json.loads(raw)
+            items = [str(item) for item in parsed]
+        else:
+            items = raw.split(",")
+        return [item.strip() for item in items if item.strip()]
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    """Return the cached application settings."""
+    return Settings()
