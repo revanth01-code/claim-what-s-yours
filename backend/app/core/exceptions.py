@@ -18,6 +18,13 @@ class DatabaseNotConfiguredError(RuntimeError):
         super().__init__("Database is not configured.")
 
 
+class DatabaseUnavailableError(RuntimeError):
+    """Raised when a configured database cannot serve a request."""
+
+    def __init__(self) -> None:
+        super().__init__("Database is unavailable.")
+
+
 def _error_body(code: str, message: str) -> dict[str, Any]:
     """Build the standard error payload."""
     return {"error": {"code": code, "message": message}}
@@ -58,6 +65,20 @@ async def _database_not_configured_handler(
     )
 
 
+async def _database_unavailable_handler(
+    request: Request, exc: DatabaseUnavailableError
+) -> JSONResponse:
+    """Map database execution failures to a stable 503 response."""
+    del request, exc
+    return JSONResponse(
+        status_code=503,
+        content=_error_body(
+            "database_unavailable",
+            "Database is temporarily unavailable.",
+        ),
+    )
+
+
 async def _unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Log the traceback server-side and return a generic 500 payload."""
     logger.exception("Unhandled exception while processing request")
@@ -74,5 +95,9 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(
         DatabaseNotConfiguredError,
         _database_not_configured_handler,
+    )
+    app.add_exception_handler(
+        DatabaseUnavailableError,
+        _database_unavailable_handler,
     )
     app.add_exception_handler(Exception, _unhandled_exception_handler)

@@ -3,10 +3,12 @@
 from fastapi import APIRouter
 
 from app.api.v1.health import router as health_router
+from app.api.v1.scholarships import router as scholarships_router
 
 
 def build_api_router(prefix: str) -> APIRouter:
     """Return a router containing all v1 routes, mounted under the given prefix."""
     api_router = APIRouter(prefix=prefix)
     api_router.include_router(health_router)
+    api_router.include_router(scholarships_router)
     return api_router
