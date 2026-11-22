@@ -1,17 +1,21 @@
 """Public scholarship catalog endpoints."""
 
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db_session
+from app.modules.auth.dependencies import get_current_user
 from app.modules.scholarships.models import (
+    SavedScholarship,
     Scholarship,
     ScholarshipAcademicYear,
     ScholarshipSource,
 )
+from app.modules.users.models import User
 from app.modules.scholarships.service import (
     SortField,
     SortOrder,
@@ -159,6 +163,84 @@ def get_scholarships(
             total_pages=total_pages,
         ),
     )
+
+
+@router.get("/saved", response_model=list[ScholarshipResponse])
+def list_saved_scholarships(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_db_session)],
+) -> list[ScholarshipResponse]:
+    """List all active scholarships bookmarked/saved by the current student."""
+    stmt = (
+        select(Scholarship)
+        .join(SavedScholarship, SavedScholarship.scholarship_id == Scholarship.id)
+        .where(
+            SavedScholarship.user_id == current_user.id,
+            Scholarship.is_active.is_(True),
+        )
+        .order_by(SavedScholarship.created_at.desc())
+    )
+    items = session.scalars(stmt).all()
+    return [_scholarship_response(item) for item in items]
+
+
+@router.post("/{scholarship_id}/save", status_code=status.HTTP_201_CREATED)
+def save_scholarship(
+    scholarship_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_db_session)],
+) -> dict[str, object]:
+    """Save/bookmark a scholarship for the student (idempotent)."""
+    sch = session.get(Scholarship, scholarship_id)
+    if not sch:
+        raise HTTPException(status_code=404, detail="Scholarship not found")
+
+    existing = session.scalar(
+        select(SavedScholarship).where(
+            SavedScholarship.user_id == current_user.id,
+            SavedScholarship.scholarship_id == scholarship_id,
+        )
+    )
+    if not existing:
+        saved = SavedScholarship(user_id=current_user.id, scholarship_id=scholarship_id)
+        session.add(saved)
+        session.commit()
+    return {"saved": True, "scholarship_id": str(scholarship_id)}
+
+
+@router.delete("/{scholarship_id}/save")
+def unsave_scholarship(
+    scholarship_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_db_session)],
+) -> dict[str, object]:
+    """Remove a saved/bookmarked scholarship for the student (idempotent)."""
+    existing = session.scalar(
+        select(SavedScholarship).where(
+            SavedScholarship.user_id == current_user.id,
+            SavedScholarship.scholarship_id == scholarship_id,
+        )
+    )
+    if existing:
+        session.delete(existing)
+        session.commit()
+    return {"saved": False, "scholarship_id": str(scholarship_id)}
+
+
+@router.get("/{scholarship_id}/is-saved")
+def check_is_saved(
+    scholarship_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_db_session)],
+) -> dict[str, bool]:
+    """Check if the scholarship is currently bookmarked by the student."""
+    existing = session.scalar(
+        select(SavedScholarship).where(
+            SavedScholarship.user_id == current_user.id,
+            SavedScholarship.scholarship_id == scholarship_id,
+        )
+    )
+    return {"is_saved": existing is not None}
 
 
 @router.get("/{scholarship_id}", response_model=ScholarshipResponse)

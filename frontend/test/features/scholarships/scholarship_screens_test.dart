@@ -36,6 +36,18 @@ class _FakeScholarshipRepository implements ScholarshipRepository {
     }
     return handler(id);
   }
+
+  @override
+  Future<List<Scholarship>> fetchSaved() async => const [];
+
+  @override
+  Future<bool> saveScholarship(String id) async => true;
+
+  @override
+  Future<bool> unsaveScholarship(String id) async => false;
+
+  @override
+  Future<bool> isSaved(String id) async => false;
 }
 
 Scholarship _scholarship({

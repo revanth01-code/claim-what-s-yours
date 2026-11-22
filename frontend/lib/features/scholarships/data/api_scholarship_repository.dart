@@ -88,6 +88,43 @@ class ApiScholarshipRepository implements ScholarshipRepository {
     }
   }
 
+  @override
+  Future<List<Scholarship>> fetchSaved() async {
+    final response = await _client.get<List<dynamic>>('$_listPath/saved');
+    final list = response.data ?? [];
+    return list.map((item) {
+      try {
+        return parseScholarship(item);
+      } on ScholarshipParseException catch (error) {
+        throw _malformed(error);
+      }
+    }).toList();
+  }
+
+  @override
+  Future<bool> saveScholarship(String id) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '$_listPath/${Uri.encodeComponent(id.trim())}/save',
+    );
+    return response.data?['saved'] as bool? ?? true;
+  }
+
+  @override
+  Future<bool> unsaveScholarship(String id) async {
+    final response = await _client.delete<Map<String, dynamic>>(
+      '$_listPath/${Uri.encodeComponent(id.trim())}/save',
+    );
+    return response.data?['saved'] as bool? ?? false;
+  }
+
+  @override
+  Future<bool> isSaved(String id) async {
+    final response = await _client.get<Map<String, dynamic>>(
+      '$_listPath/${Uri.encodeComponent(id.trim())}/is-saved',
+    );
+    return response.data?['is_saved'] as bool? ?? false;
+  }
+
   BadResponseException _malformed(ScholarshipParseException cause) {
     return BadResponseException(
       _malformedMessage,

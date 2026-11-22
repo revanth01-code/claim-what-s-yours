@@ -31,6 +31,18 @@ class _FakeScholarshipRepository implements ScholarshipRepository {
       'fetchById is not used by the list controller tests.',
     );
   }
+
+  @override
+  Future<List<Scholarship>> fetchSaved() async => const [];
+
+  @override
+  Future<bool> saveScholarship(String id) async => true;
+
+  @override
+  Future<bool> unsaveScholarship(String id) async => false;
+
+  @override
+  Future<bool> isSaved(String id) async => false;
 }
 
 Scholarship _scholarship(String id, {String? name}) {

@@ -39,6 +39,18 @@ class _FakeScholarshipRepository implements ScholarshipRepository {
       orElse: () => throw Exception('Not found'),
     );
   }
+
+  @override
+  Future<List<Scholarship>> fetchSaved() async => [];
+
+  @override
+  Future<bool> saveScholarship(String id) async => true;
+
+  @override
+  Future<bool> unsaveScholarship(String id) async => false;
+
+  @override
+  Future<bool> isSaved(String id) async => false;
 }
 
 class _FakeProfileRepository implements StudentProfileRepository {

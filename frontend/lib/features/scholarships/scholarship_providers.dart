@@ -15,3 +15,15 @@ final scholarshipDetailProvider = FutureProvider.autoDispose
     .family<Scholarship, String>((ref, id) {
       return ref.watch(scholarshipRepositoryProvider).fetchById(id);
     });
+
+/// Loads all saved scholarships for the student.
+final savedScholarshipsProvider = FutureProvider.autoDispose<List<Scholarship>>((ref) {
+  return ref.watch(scholarshipRepositoryProvider).fetchSaved();
+});
+
+/// Checks if a specific scholarship is saved.
+final isScholarshipSavedProvider = FutureProvider.autoDispose
+    .family<bool, String>((ref, id) {
+  return ref.watch(scholarshipRepositoryProvider).isSaved(id);
+});
+

@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:claim_whats_yours/app/router/route_names.dart';
 import 'package:claim_whats_yours/app/theme/app_colors.dart';
+import 'package:claim_whats_yours/core/network/api_client.dart';
+import 'package:claim_whats_yours/features/assistant/data/assistant_repository.dart';
+import 'package:claim_whats_yours/features/assistant/domain/ai_guidance.dart';
 import 'package:claim_whats_yours/shared/widgets/responsive_content_container.dart';
 
-/// Supported language definition for the multilingual AI assistant.
 enum AssistantLanguage {
-  english('English', 'EN', 'Grounded government guidelines'),
-  telugu('తెలుగు', 'TE', 'తెలంగాణ పథకాలు మరియు పత్రాల వివరాలు'),
-  hindi('हिंदी', 'HI', 'सरकारी छात्रवृत्ति और पात्रता नियम');
+  english('English', 'en', 'Grounded government guidelines'),
+  telugu('తెలుగు', 'te', 'తెలంగాణ పథకాలు మరియు పత్రాల వివరాలు'),
+  hindi('हिंदी', 'hi', 'सरकारी छात्रवृत्ति और पात्रता नियम');
 
   const AssistantLanguage(this.label, this.code, this.description);
   final String label;
@@ -17,18 +21,20 @@ enum AssistantLanguage {
   final String description;
 }
 
-/// Production-ready, premium Presentation boundary for the Multilingual AI Scholarship Assistant.
-/// Grounded strictly in official government gazettes and administrator-verified records
-/// as defined in `docs/ai-architecture.md`.
-class AssistantScreen extends StatefulWidget {
+class AssistantScreen extends ConsumerStatefulWidget {
   const AssistantScreen({super.key});
 
   @override
-  State<AssistantScreen> createState() => _AssistantScreenState();
+  ConsumerState<AssistantScreen> createState() => _AssistantScreenState();
 }
 
-class _AssistantScreenState extends State<AssistantScreen> {
+class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   AssistantLanguage _selectedLanguage = AssistantLanguage.english;
+  final TextEditingController _queryCtrl = TextEditingController();
+  final ScrollController _scrollCtrl = ScrollController();
+  bool _isLoading = false;
+
+  final List<ChatMessage> _messages = [];
 
   final Map<AssistantLanguage, List<String>> _samplePrompts = {
     AssistantLanguage.english: [
@@ -51,17 +57,118 @@ class _AssistantScreenState extends State<AssistantScreen> {
     ],
   };
 
-  void _navigateBack(BuildContext context) {
-    if (context.canPop()) {
-      context.pop();
-    } else {
-      context.go(RoutePaths.home);
+  @override
+  void initState() {
+    super.initState();
+    _messages.add(
+      ChatMessage(
+        text: 'Welcome to Claim What\'s Yours AI Guidance Assistant. '
+            'I provide answers grounded strictly in verified government notifications, gazettes, and official criteria. '
+            'Ask me anything about eligibility, deadlines, required documents, or application portals.',
+        isUser: false,
+        language: 'en',
+        suggestedActions: [
+          'What documents are needed for Postmatric?',
+          'Income threshold for Telangana ePASS',
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _queryCtrl.dispose();
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollCtrl.hasClients) {
+        _scrollCtrl.animateTo(
+          _scrollCtrl.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  Future<void> _sendMessage(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty || _isLoading) return;
+
+    _queryCtrl.clear();
+    setState(() {
+      _messages.add(
+        ChatMessage(
+          text: trimmed,
+          isUser: true,
+          language: _selectedLanguage.code,
+        ),
+      );
+      _isLoading = true;
+    });
+    _scrollToBottom();
+
+    try {
+      final repository = ApiAssistantRepository(ref.read(apiClientProvider));
+      final result = await repository.askGuidance(
+        query: trimmed,
+        language: _selectedLanguage.code,
+        includeProfileContext: true,
+      );
+
+      if (mounted) {
+        setState(() {
+          _messages.add(
+            ChatMessage(
+              text: result.answer,
+              isUser: false,
+              language: result.language,
+              citations: result.citations,
+              suggestedActions: result.suggestedActions,
+              disclaimer: result.disclaimer,
+            ),
+          );
+          _isLoading = false;
+        });
+        _scrollToBottom();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _messages.add(
+            ChatMessage(
+              text: 'Unable to connect to scholarship guidance service. Please verify your connection and try again.',
+              isUser: false,
+              language: _selectedLanguage.code,
+            ),
+          );
+          _isLoading = false;
+        });
+        _scrollToBottom();
+      }
     }
+  }
+
+  void _clearHistory() {
+    setState(() {
+      _messages.clear();
+      _messages.add(
+        ChatMessage(
+          text: 'Conversation history cleared. How can I assist you with government scholarships today?',
+          isUser: false,
+          language: _selectedLanguage.code,
+        ),
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -69,10 +176,21 @@ class _AssistantScreenState extends State<AssistantScreen> {
         leading: IconButton(
           tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => _navigateBack(context),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(RoutePaths.home);
+            }
+          },
         ),
         title: const Text('AI Guidance Assistant'),
         actions: [
+          IconButton(
+            tooltip: 'Clear Chat',
+            icon: const Icon(Icons.delete_sweep_outlined),
+            onPressed: _messages.length > 1 ? _clearHistory : null,
+          ),
           IconButton(
             tooltip: 'Scholarship Catalogue',
             icon: const Icon(Icons.search_rounded),
@@ -81,103 +199,329 @@ class _AssistantScreenState extends State<AssistantScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        child: ResponsiveContentContainer(
-          maxWidth: 900,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. Hero Banner
-              _buildHeroBanner(context),
-              const SizedBox(height: 20),
+      body: ResponsiveContentContainer(
+        maxWidth: 900,
+        child: Column(
+          children: [
+            // Top Bar: Language Selector & Grounding Disclaimer
+            _buildTopBar(theme, isDark),
 
-              // 2. Verified Grounding Policy Banner
-              _buildGroundingPolicyCard(context),
-              const SizedBox(height: 24),
+            // Chat Message List
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollCtrl,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                itemCount: _messages.length + (_isLoading ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == _messages.length && _isLoading) {
+                    return _buildLoadingBubble(theme, isDark);
+                  }
+                  final msg = _messages[index];
+                  return _buildMessageBubble(theme, isDark, msg);
+                },
+              ),
+            ),
 
-              // 3. Language Selector
-              _buildLanguageSelector(context),
-              const SizedBox(height: 24),
+            // Quick Suggestions Chips
+            _buildQuickSuggestions(theme, isDark),
 
-              // 4. Sample Inquiries Preview
-              _buildSampleInquiries(context),
-              const SizedBox(height: 28),
-
-              // 5. Verification Notice & Action Buttons
-              _buildActionFooter(context),
-              const SizedBox(height: 20),
-            ],
-          ),
+            // Input Area
+            _buildInputArea(theme, isDark),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildHeroBanner(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
+  Widget _buildTopBar(ThemeData theme, bool isDark) {
     return Container(
-      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceElevatedDark : AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? AppColors.outlineDark : AppColors.outlineLight,
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? AppColors.outlineDark : AppColors.outlineLight,
+          ),
         ),
       ),
-      padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.primaryContainerDark : AppColors.primaryContainer,
-                  borderRadius: BorderRadius.circular(20),
-                ),
+              Expanded(
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.auto_awesome_rounded,
-                      color: isDark ? AppColors.onPrimaryContainerDark : AppColors.onPrimaryContainer,
-                      size: 14,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.teal.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'STRICT GROUNDING',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.teal,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'MULTILINGUAL SCHOLARSHIP GUIDANCE',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: isDark ? AppColors.onPrimaryContainerDark : AppColors.onPrimaryContainer,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Official-Source Grounded Guidance',
+                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
+              // Language Selector SegmentedButton with full language labels
+              SegmentedButton<AssistantLanguage>(
+                segments: AssistantLanguage.values.map((lang) {
+                  return ButtonSegment<AssistantLanguage>(
+                    value: lang,
+                    label: Text(lang.label),
+                  );
+                }).toList(),
+                selected: {_selectedLanguage},
+                onSelectionChanged: (set) {
+                  if (set.isNotEmpty) {
+                    setState(() => _selectedLanguage = set.first);
+                  }
+                },
+                showSelectedIcon: false,
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.shield_outlined, size: 14, color: AppColors.teal),
+              const SizedBox(width: 6),
+              const Text(
+                'Safety & Zero-Hallucination Policy',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.teal),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '• Answers are grounded exclusively in verified official scholarship criteria.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageBubble(ThemeData theme, bool isDark, ChatMessage msg) {
+    final isUser = msg.isUser;
+    final bubbleColor = isUser
+        ? (isDark ? AppColors.primaryDark : AppColors.primary)
+        : (isDark ? AppColors.cardDark : AppColors.cardLight);
+    final textColor = isUser
+        ? (isDark ? AppColors.onPrimaryDark : AppColors.onPrimary)
+        : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight);
+    final borderColor = isUser
+        ? Colors.transparent
+        : (isDark ? AppColors.outlineDark : AppColors.outlineLight);
+
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        constraints: const BoxConstraints(maxWidth: 680),
+        decoration: BoxDecoration(
+          color: bubbleColor,
+          borderRadius: BorderRadius.circular(16).copyWith(
+            bottomRight: isUser ? const Radius.circular(2) : const Radius.circular(16),
+            bottomLeft: isUser ? const Radius.circular(16) : const Radius.circular(2),
+          ),
+          border: Border.all(color: borderColor),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isUser ? Icons.person_outline : Icons.auto_awesome,
+                  size: 14,
+                  color: isUser ? textColor.withOpacity(0.8) : AppColors.lavender,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  isUser ? 'You' : 'Claim What\'s Yours Assistant',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isUser ? textColor.withOpacity(0.8) : AppColors.lavender,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            SelectableText(
+              msg.text,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: textColor,
+                height: 1.45,
+              ),
+            ),
+            // Citations
+            if (msg.citations.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: msg.citations.map((c) {
+                  return InkWell(
+                    onTap: c.url != null ? () => launchUrl(Uri.parse(c.url!)) : null,
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.surfaceElevatedDark : AppColors.primaryContainer,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: isDark ? AppColors.outlineDark : AppColors.primary.withOpacity(0.2),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.link, size: 12, color: AppColors.teal),
+                          const SizedBox(width: 4),
+                          Text(
+                            c.title,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: isDark ? AppColors.tealDark : AppColors.teal,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+            // Suggested Next Prompts
+            if (msg.suggestedActions.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: msg.suggestedActions.map((action) {
+                  return ActionChip(
+                    label: Text(action),
+                    labelStyle: theme.textTheme.labelSmall,
+                    onPressed: () => _sendMessage(action),
+                  );
+                }).toList(),
+              ),
+            ],
+            // Grounding Disclaimer
+            if (msg.disclaimer != null && !isUser) ...[
+              const SizedBox(height: 8),
+              Text(
+                msg.disclaimer!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 10,
+                  color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight).withOpacity(0.7),
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingBubble(ThemeData theme, bool isDark) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.cardDark : AppColors.cardLight,
+          borderRadius: BorderRadius.circular(16).copyWith(bottomLeft: const Radius.circular(2)),
+          border: Border.all(color: isDark ? AppColors.outlineDark : AppColors.outlineLight),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Consulting verified scholarship records...',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickSuggestions(ThemeData theme, bool isDark) {
+    final prompts = _samplePrompts[_selectedLanguage] ?? [];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Text(
-            'Official-Source Grounded Guidance',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              color: isDark ? AppColors.onSurfaceDark : AppColors.onSurfaceLight,
+            'Sample Grounded Inquiries (${_selectedLanguage.label})',
+            style: theme.textTheme.labelMedium?.copyWith(
               fontWeight: FontWeight.bold,
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
             ),
           ),
-          const SizedBox(height: 8),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 700),
-            child: Text(
-              'Get clear answers to your scholarship and document eligibility questions in Telugu, Hindi or English — strictly backed by official government gazettes and verified portals.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: isDark ? AppColors.onSurfaceVariantDark : AppColors.onSurfaceVariantLight,
-                height: 1.4,
-              ),
+          const SizedBox(height: 6),
+          SizedBox(
+            height: 38,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: prompts.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              itemBuilder: (context, i) {
+                final p = prompts[i];
+                return ActionChip(
+                  label: Text(p),
+                  labelStyle: theme.textTheme.labelSmall?.copyWith(
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                  ),
+                  backgroundColor: isDark ? AppColors.surfaceElevatedDark : AppColors.surfaceLight,
+                  side: BorderSide(
+                    color: isDark ? AppColors.outlineDark : AppColors.outlineLight,
+                  ),
+                  onPressed: () => _sendMessage(p),
+                );
+              },
             ),
           ),
         ],
@@ -185,191 +529,43 @@ class _AssistantScreenState extends State<AssistantScreen> {
     );
   }
 
-  Widget _buildGroundingPolicyCard(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      elevation: 0,
-      color: AppColors.secondaryContainer.withValues(alpha: 0.25),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: AppColors.secondary.withValues(alpha: 0.3)),
+  Widget _buildInputArea(ThemeData theme, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceElevatedDark : AppColors.surfaceLight,
+        border: Border(
+          top: BorderSide(color: isDark ? AppColors.outlineDark : AppColors.outlineLight),
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.shield_outlined, color: AppColors.secondary, size: 22),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Safety & Zero-Hallucination Policy',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.onSecondaryContainer,
-                    ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _queryCtrl,
+              textInputAction: TextInputAction.send,
+              onSubmitted: _sendMessage,
+              decoration: InputDecoration(
+                hintText: _selectedLanguage == AssistantLanguage.telugu
+                    ? 'స్కాలర్‌షిప్‌లు, నియమాలు లేదా అర్హత గురించి అడగండి...'
+                    : 'Ask about eligibility, deadlines, documents, or schemes...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(
+                    color: isDark ? AppColors.outlineDark : AppColors.outlineLight,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryContainer,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'STRICT GROUNDING',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.onSecondaryContainer,
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'To protect students from inaccurate rules or fabricated deadlines, our AI assistant is coupled with a deterministic eligibility engine and only synthesizes responses from verified, administrator-approved government sources. Conversational queries will be fully activated upon completion of the pending verification cycle.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.onSecondaryContainer.withValues(alpha: 0.9),
-                height: 1.4,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 8),
+          IconButton.filled(
+            icon: const Icon(Icons.send_rounded),
+            onPressed: _isLoading ? null : () => _sendMessage(_queryCtrl.text),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildLanguageSelector(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Select Guidance Language',
-          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 8,
-          children: AssistantLanguage.values.map((lang) {
-            final isSelected = _selectedLanguage == lang;
-            return ChoiceChip(
-              avatar: CircleAvatar(
-                radius: 12,
-                backgroundColor: isSelected ? Colors.white : theme.colorScheme.primaryContainer,
-                child: Text(
-                  lang.code,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: isSelected ? AppColors.primary : AppColors.onPrimaryContainer,
-                  ),
-                ),
-              ),
-              label: Text(lang.label, style: const TextStyle(fontWeight: FontWeight.bold)),
-              selected: isSelected,
-              selectedColor: AppColors.primary,
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.white : theme.colorScheme.onSurface,
-              ),
-              onSelected: (selected) {
-                if (selected) {
-                  setState(() => _selectedLanguage = lang);
-                }
-              },
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSampleInquiries(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final prompts = _samplePrompts[_selectedLanguage] ?? [];
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.help_outline_rounded, size: 20, color: AppColors.primary),
-                const SizedBox(width: 8),
-                Text(
-                  'Sample Grounded Inquiries (${_selectedLanguage.label})',
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            ...prompts.map((prompt) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.chat_bubble_outline_rounded, size: 16, color: AppColors.primary),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          prompt,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionFooter(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        OutlinedButton.icon(
-          onPressed: () => _navigateBack(context),
-          icon: const Icon(Icons.arrow_back_rounded, size: 18),
-          label: const Text('Back to Dashboard'),
-        ),
-        const SizedBox(width: 16),
-        FilledButton.icon(
-          onPressed: () => context.go(RoutePaths.scholarships),
-          icon: const Icon(Icons.search_rounded, size: 18),
-          label: const Text('Browse Scholarships'),
-        ),
-      ],
     );
   }
 }

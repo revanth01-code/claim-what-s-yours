@@ -288,3 +288,38 @@ class ScholarshipSource(Base):
             name="ck_scholarship_sources_verification_status",
         ),
     )
+
+
+class SavedScholarship(Base):
+    __tablename__ = "saved_scholarships"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    scholarship_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("scholarships.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.utcnow,
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    scholarship: Mapped["Scholarship"] = relationship(lazy="joined")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "scholarship_id", name="uq_saved_scholarships_user_scholarship"),
+    )
+

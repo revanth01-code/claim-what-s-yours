@@ -246,4 +246,76 @@ class ApiClient {
       throw mapDioError(e);
     }
   }
+
+  /// Perform a PUT request.
+  Future<Response<T>> put<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      return await _dio.put<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
+    } on DioException catch (e) {
+      if (e.error is ApiException) {
+        throw e.error as ApiException;
+      }
+      throw mapDioError(e);
+    }
+  }
+
+  /// Perform a PATCH request.
+  Future<Response<T>> patch<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      return await _dio.patch<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
+    } on DioException catch (e) {
+      if (e.error is ApiException) {
+        throw e.error as ApiException;
+      }
+      throw mapDioError(e);
+    }
+  }
+
+  /// Perform a DELETE request.
+  Future<Response<T>> delete<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      return await _dio.delete<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
+    } on DioException catch (e) {
+      if (e.error is ApiException) {
+        throw e.error as ApiException;
+      }
+      throw mapDioError(e);
+    }
+  }
 }

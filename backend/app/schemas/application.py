@@ -7,12 +7,15 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 ApplicationStatus = Literal[
+    "interested",
+    "preparing",
     "draft",
     "submitted",
     "under_review",
     "approved",
     "disbursed",
     "rejected",
+    "withdrawn",
 ]
 
 
@@ -28,6 +31,7 @@ class ApplicationRecordCreate(BaseModel):
     scholarship_id: uuid.UUID
     portal_name: str = Field(min_length=2, max_length=128)
     application_reference_number: str = Field(min_length=2, max_length=128)
+    status: ApplicationStatus = "submitted"
     academic_year: str = Field(default="2026-2027", max_length=32)
     applied_amount: float | None = Field(default=None, ge=0.0)
     notes: str | None = Field(default=None, max_length=1000)

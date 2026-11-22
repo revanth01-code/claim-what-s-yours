@@ -58,9 +58,10 @@ class ApplicationService:
 
         now = datetime.utcnow()
         submitted_at = payload.submitted_at or now
+        init_status = payload.status or "submitted"
         timeline = [
             {
-                "status": "submitted",
+                "status": init_status,
                 "timestamp": submitted_at.isoformat(),
                 "note": payload.notes or "Application tracked in Claim What's Yours",
             }
@@ -71,7 +72,7 @@ class ApplicationService:
             scholarship_id=payload.scholarship_id,
             portal_name=payload.portal_name,
             application_reference_number=payload.application_reference_number,
-            status="submitted",
+            status=init_status,
             academic_year=payload.academic_year,
             applied_amount=Decimal(str(payload.applied_amount)) if payload.applied_amount is not None else None,
             notes=payload.notes,

@@ -6,6 +6,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:claim_whats_yours/app/router/route_names.dart';
 import 'package:claim_whats_yours/core/errors/api_exception.dart';
 import 'package:claim_whats_yours/core/errors/app_exception.dart';
+import 'package:claim_whats_yours/features/eligibility/domain/eligibility_models.dart';
+import 'package:claim_whats_yours/features/eligibility/presentation/eligibility_providers.dart';
 import 'package:claim_whats_yours/features/scholarships/domain/scholarship.dart';
 import 'package:claim_whats_yours/features/scholarships/scholarship_providers.dart';
 import 'package:claim_whats_yours/shared/widgets/app_error.dart';
@@ -80,6 +82,9 @@ class _ScholarshipDetailScreenState
   }
 
   Widget _buildScaffold(BuildContext context, String title, Widget body) {
+    final isSavedAsync = ref.watch(isScholarshipSavedProvider(widget.scholarshipId));
+    final isSaved = isSavedAsync.asData?.value ?? false;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -88,6 +93,41 @@ class _ScholarshipDetailScreenState
           onPressed: () => _goBack(context),
         ),
         title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+        actions: [
+          IconButton(
+            tooltip: isSaved ? 'Remove from Saved' : 'Save Scholarship',
+            icon: Icon(
+              isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+              color: isSaved ? Theme.of(context).colorScheme.primary : null,
+            ),
+            onPressed: () async {
+              try {
+                if (isSaved) {
+                  await ref.read(scholarshipRepositoryProvider).unsaveScholarship(widget.scholarshipId);
+                } else {
+                  await ref.read(scholarshipRepositoryProvider).saveScholarship(widget.scholarshipId);
+                }
+                ref.invalidate(isScholarshipSavedProvider(widget.scholarshipId));
+                ref.invalidate(savedScholarshipsProvider);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(isSaved ? 'Removed from saved scholarships' : 'Saved to your dashboard'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error updating bookmark: $e')),
+                  );
+                }
+              }
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: body,
     );
@@ -122,8 +162,13 @@ class _ScholarshipDetailScreenState
   Widget _buildContent(BuildContext context, Scholarship scholarship) {
     final theme = Theme.of(context);
     final description = _nonEmpty(scholarship.description);
+    final eligibilityAsync = ref.watch(scholarshipEligibilityProvider(widget.scholarshipId));
+
     final sections = <Widget>[
       _buildHeader(context, scholarship),
+      // Deterministic Eligibility Evaluation Card
+      _buildEligibilityResultCard(context, eligibilityAsync),
+      const SizedBox(height: 16),
       if (description != null)
         _section(context, 'About', [
           Text(description, style: theme.textTheme.bodyLarge),
@@ -168,6 +213,102 @@ class _ScholarshipDetailScreenState
           children: sections,
         ),
       ),
+    );
+  }
+
+  Widget _buildEligibilityResultCard(
+    BuildContext context,
+    AsyncValue<EligibilityEvaluationResult> asyncVal,
+  ) {
+    final theme = Theme.of(context);
+    return asyncVal.when(
+      data: (res) {
+        Color badgeColor;
+        IconData badgeIcon;
+        String title;
+
+        if (res.isEligible) {
+          badgeColor = Colors.teal;
+          badgeIcon = Icons.check_circle_outline;
+          title = 'You are Eligible for this Scheme';
+        } else if (res.isNeedsInfo) {
+          badgeColor = Colors.orange;
+          badgeIcon = Icons.help_outline;
+          title = 'More Information Needed to Confirm';
+        } else if (res.isIneligible) {
+          badgeColor = Colors.blueGrey;
+          badgeIcon = Icons.cancel_outlined;
+          title = 'Criteria Not Met';
+        } else {
+          badgeColor = Colors.deepPurple;
+          badgeIcon = Icons.pending_outlined;
+          title = 'Official Criteria Pending Verification';
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: badgeColor.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: badgeColor.withOpacity(0.4)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(badgeIcon, color: badgeColor, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: badgeColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                res.summary,
+                style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
+              ),
+              if (res.matchedConditions.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Matched: ${res.matchedConditions.join(", ")}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.teal.shade800,
+                  ),
+                ),
+              ],
+              if (res.missingFields.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  'Missing from your profile: ${res.missingFields.join(", ")}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange.shade800,
+                  ),
+                ),
+              ],
+              if (res.unmetConditions.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  'Unmet: ${res.unmetConditions.join(", ")}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blueGrey.shade800,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 

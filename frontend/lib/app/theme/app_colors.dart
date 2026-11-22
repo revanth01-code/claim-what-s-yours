@@ -91,4 +91,17 @@ abstract final class AppColors {
   static const Color onWarning = Color(0xFFFFFFFF);
   static const Color warningContainer = Color(0xFFFAF2E6);
   static const Color onWarningContainer = Color(0xFF523B17);
+
+  // Convenient Aliases
+  static const Color teal = secondary;
+  static const Color tealDark = secondaryDark;
+  static const Color lavender = tertiary;
+  static const Color lavenderDark = tertiaryDark;
+  static const Color coral = error;
+  static const Color cardLight = surfaceLight;
+  static const Color cardDark = surfaceDark;
+  static const Color textPrimaryLight = onSurfaceLight;
+  static const Color textPrimaryDark = onSurfaceDark;
+  static const Color textSecondaryLight = onSurfaceVariantLight;
+  static const Color textSecondaryDark = onSurfaceVariantDark;
 }
