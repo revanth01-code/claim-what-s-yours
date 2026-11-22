@@ -1,7 +1,9 @@
 """Database base, session, health and model registration helpers."""
 
 from app.db.base import Base
+from app.modules.admin.models import VerificationAuditLog
 from app.modules.eligibility import EligibilityCriteria
+from app.modules.profiles.models import StudentProfile
 from app.modules.scholarships import (
     AcademicYear,
     OfficialSource,
@@ -9,6 +11,7 @@ from app.modules.scholarships import (
     ScholarshipAcademicYear,
     ScholarshipSource,
 )
+from app.modules.users.models import User
 
 __all__ = [
     "AcademicYear",
@@ -18,4 +21,7 @@ __all__ = [
     "Scholarship",
     "ScholarshipAcademicYear",
     "ScholarshipSource",
+    "StudentProfile",
+    "User",
+    "VerificationAuditLog",
 ]

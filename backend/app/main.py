@@ -27,14 +27,23 @@ def create_app() -> FastAPI:
     )
 
     origins = settings.cors_origins_list
-    if origins:
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=origins,
-            allow_credentials=False,
-            allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-            allow_headers=["Authorization", "Content-Type"],
-        )
+
+# Dynamic Flutter Web development ports are allowed only outside production.
+    local_dev_origin_regex = (
+        None
+        if is_production
+        else r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_origin_regex=local_dev_origin_regex,
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
+        
 
     register_exception_handlers(app)
     app.include_router(build_api_router(settings.api_prefix))

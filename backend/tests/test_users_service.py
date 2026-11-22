@@ -282,7 +282,7 @@ def test_disabled_race_winner_is_not_mutated(
 
 
 def test_check_constraint_rejects_unknown_role(session: Session) -> None:
-    session.add(User(firebase_uid="ck-role", role="admin"))
+    session.add(User(firebase_uid="ck-role", role="superadmin"))
     with pytest.raises(IntegrityError):
         session.commit()
     session.rollback()

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import (
     AccountDisabledError,
     AuthenticationError,
+    AuthorizationError,
     DatabaseUnavailableError,
 )
 from app.db.session import get_db_session
@@ -106,3 +107,15 @@ def get_current_user(
             raise DatabaseUnavailableError() from exc
         raise
     return user
+
+
+def require_admin(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Enforce that the authenticated user possesses the admin role.
+
+    Students and other non-admin users are rejected with AuthorizationError (403).
+    """
+    if current_user.role != "admin":
+        raise AuthorizationError("Administrator access required.")
+    return current_user

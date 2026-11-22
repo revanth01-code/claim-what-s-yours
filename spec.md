@@ -164,7 +164,7 @@ The frontend must be responsive and support different screen sizes.
 | Validation | Pydantic | Request and response validation |
 | ORM | SQLAlchemy | Database interaction |
 | Migrations | Alembic | Database schema management |
-| Authentication | JWT-based authentication | Protected API access |
+| Authentication | UNRESOLVED: JWT, Firebase Auth or Supabase Auth; provider and implementation require user approval | Protected API access |
 | Password hashing | Argon2id or an appropriate secure password-hashing implementation | Password protection |
 
 ## 3.3 Database and Storage
@@ -1592,7 +1592,7 @@ Do not expose stack traces, database errors, secrets, or internal implementation
 }
 ```
 
-The exact registration fields and verification mechanism may be adapted to the selected authentication implementation.
+The exact registration fields and verification mechanism may be adapted to the authentication approach, which is unresolved and requires user approval.
 
 ### Login Request
 
@@ -2816,9 +2816,9 @@ The following items require research or explicit finalization before their relev
 | Decision | Current Status |
 |---|---|
 | Flutter for Android and Web | Confirmed |
-| Python and FastAPI backend | Selected baseline |
-| PostgreSQL | Selected baseline |
-| Modular monolith architecture | Selected baseline |
+| Python and FastAPI backend | Approved (user decision) |
+| PostgreSQL | Approved (user decision) |
+| Modular monolith architecture | Approved for MVP (user decision) |
 | Hybrid AI approach | Confirmed |
 | Deterministic eligibility engine | Required |
 | LLM provider | To be finalized |

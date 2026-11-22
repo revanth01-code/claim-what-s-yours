@@ -45,6 +45,16 @@ class AccountDisabledError(RuntimeError):
         super().__init__("Account is disabled.")
 
 
+class AuthorizationError(RuntimeError):
+    """Raised when an authenticated user lacks permission for an operation (403)."""
+
+    status_code = 403
+    error_code = "forbidden"
+
+    def __init__(self, message: str = "Access forbidden.") -> None:
+        super().__init__(message)
+
+
 class AuthServiceUnavailableError(RuntimeError):
     """Raised when the identity provider cannot be reached or verified (503)."""
 
@@ -53,6 +63,16 @@ class AuthServiceUnavailableError(RuntimeError):
 
     def __init__(self) -> None:
         super().__init__("Authentication service is temporarily unavailable.")
+
+
+class EntityNotFoundError(RuntimeError):
+    """Raised when a requested resource does not exist (404)."""
+
+    status_code = 404
+    error_code = "not_found"
+
+    def __init__(self, message: str = "Resource not found.") -> None:
+        super().__init__(message)
 
 
 def _error_body(code: str, message: str) -> dict[str, Any]:
@@ -131,10 +151,32 @@ async def _account_disabled_handler(request: Request, exc: AccountDisabledError)
     )
 
 
+async def _authorization_error_handler(
+    request: Request, exc: AuthorizationError
+) -> JSONResponse:
+    """Map permission failures to a stable 403 response."""
+    del request
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=_error_body(exc.error_code, str(exc)),
+    )
+
+
 async def _auth_service_unavailable_handler(
     request: Request, exc: AuthServiceUnavailableError
 ) -> JSONResponse:
     """Map identity provider outages to a stable 503 response."""
+    del request
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=_error_body(exc.error_code, str(exc)),
+    )
+
+
+async def _entity_not_found_handler(
+    request: Request, exc: EntityNotFoundError
+) -> JSONResponse:
+    """Map missing resource errors to a 404 response."""
     del request
     return JSONResponse(
         status_code=exc.status_code,
@@ -165,8 +207,10 @@ def register_exception_handlers(app: FastAPI) -> None:
     )
     app.add_exception_handler(AuthenticationError, _authentication_error_handler)
     app.add_exception_handler(AccountDisabledError, _account_disabled_handler)
+    app.add_exception_handler(AuthorizationError, _authorization_error_handler)
     app.add_exception_handler(
         AuthServiceUnavailableError,
         _auth_service_unavailable_handler,
     )
+    app.add_exception_handler(EntityNotFoundError, _entity_not_found_handler)
     app.add_exception_handler(Exception, _unhandled_exception_handler)

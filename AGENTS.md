@@ -46,8 +46,8 @@ The following technologies define the current proposed or selected direction.
 | Component | Technology | Status |
 |---|---|---|
 | Frontend | Flutter | Selected |
-| Backend | Python + FastAPI | Proposed |
-| Database | PostgreSQL | Proposed |
+| Backend | Python + FastAPI | Approved |
+| Database | PostgreSQL | Approved |
 | AI Architecture | Hybrid AI | Selected |
 | Language Model | Provider-independent LLM integration | To be finalized |
 | Eligibility Engine | Deterministic rule-based engine | Selected |
@@ -56,7 +56,7 @@ The following technologies define the current proposed or selected direction.
 | Dynamic Web Extraction | Playwright | Proposed |
 | PDF Extraction | PyMuPDF | Proposed |
 | Background Scheduling | APScheduler | Proposed |
-| Deployment | Cloud infrastructure | Selected |
+| Deployment | Cloud infrastructure (category only; provider UNRESOLVED) | Selected |
 | Coding Agent | GitHub Copilot (primary) | Preferred |
 
 ### Technology Rules

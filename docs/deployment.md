@@ -20,3 +20,15 @@ Maintain separate development, staging or testing, and production environments w
 
 The exact cloud provider, object-storage provider and monitoring solution are unresolved.
 
+## Open Evaluation Items
+
+Status: all items below are UNRESOLVED. Listed providers are proposed options only; none is approved.
+
+- Cloud provider and hosting: UNRESOLVED.
+- Database hosting and data residency: UNRESOLVED.
+- Authentication provider: UNRESOLVED (Firebase Auth, Supabase Auth and JWT are options; none is approved).
+- Object storage: UNRESOLVED.
+- Backup and recovery targets: UNRESOLVED.
+- Monitoring and deployment strategy: UNRESOLVED.
+- Provider costs, limitations and vendor lock-in: UNRESOLVED; no dated official pricing has been established.
+

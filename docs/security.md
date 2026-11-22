@@ -2,7 +2,7 @@
 
 ## Authentication
 
-Protected operations require authenticated and authorized access. The exact authentication provider is unresolved; JWT-based authentication is the selected baseline for the application.
+Protected operations require authenticated and authorized access. Authentication provider and implementation are UNRESOLVED. Firebase Auth, Supabase Auth and JWT-based authentication are options under evaluation; none is approved.
 
 ## Personal Data
 

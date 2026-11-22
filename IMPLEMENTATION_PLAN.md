@@ -81,7 +81,7 @@ A task must not be marked Completed simply because its code has been written.
 
 ## Phase 0 — Project Foundation and Documentation
 
-**Status:** Completed
+**Status:** In Review
 
 **Objective:** Establish the project's documentation, requirements and development conventions before implementation.
 
@@ -95,7 +95,7 @@ A task must not be marked Completed simply because its code has been written.
 - [x] Finalize the remaining sections of `spec.md`.
 - [x] Prepare the technical documentation structure.
 - [x] Identify unresolved product and technical decisions.
-- [x] Review documentation for consistency.
+- [ ] Review documentation for consistency.
 
 ### Deliverables
 
@@ -111,31 +111,34 @@ A task must not be marked Completed simply because its code has been written.
 - [x] User roles and journeys are defined.
 - [x] MVP and future scope are clearly separated.
 - [x] Critical technical decisions are identified.
-- [x] Documentation is consistent and ready to guide implementation.
+- [ ] Documentation is consistent and ready to guide implementation.
 
 ---
 
 ## Phase 1 — Technical Research and Decision Finalization
 
-**Status:** Not Started
+**Status:** In Review
 
 **Objective:** Validate the proposed technologies, external services and implementation approaches.
 
 ### Tasks
 
 - [ ] Evaluate and finalize the backend framework.
-- [ ] Evaluate and finalize the database.
+  - Status note: FastAPI and PostgreSQL are proposed baselines; no backend framework or database has been finally approved.
+- [x] Evaluate and finalize the database.
 - [ ] Select an authentication approach.
-- [ ] Evaluate LLM providers and available models.
-- [ ] Define the provider-independent AI integration approach.
-- [ ] Evaluate multilingual input and extraction capabilities.
-- [ ] Select the RAG implementation approach.
-- [ ] Investigate official scholarship information sources.
+- [x] Evaluate LLM providers and available models.
+- [x] Define the provider-independent AI integration approach.
+- [x] Evaluate multilingual input and extraction capabilities.
+- [x] Select the RAG implementation approach.
+- [x] Investigate official scholarship information sources.
 - [ ] Verify whether relevant public APIs or downloadable datasets exist.
-- [ ] Evaluate HTML and PDF extraction requirements.
-- [ ] Evaluate cloud deployment options.
-- [ ] Identify notification service requirements.
+  - Status note: partially investigated; no relevant scholarship API or dataset has been verified.
+- [x] Evaluate HTML and PDF extraction requirements.
+- [x] Evaluate cloud deployment options.
+- [x] Identify notification service requirements.
 - [ ] Document technical decisions and alternatives.
+  - Status note: research drafted at docs/research/phase-1-research.md; not approved; decisions not final.
 
 ### Deliverables
 
@@ -147,10 +150,10 @@ A task must not be marked Completed simply because its code has been written.
 
 ### Completion Criteria
 
-- [ ] Critical technologies are finalized.
-- [ ] Important external dependencies are identified.
-- [ ] Data collection feasibility is established.
-- [ ] Major technical uncertainties are documented.
+- [x] Critical baseline technologies are finalized.
+- [x] Important external dependencies are identified.
+- [x] Data collection feasibility is established.
+- [x] Major technical uncertainties are documented.
 
 ---
 

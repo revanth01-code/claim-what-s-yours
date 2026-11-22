@@ -12,7 +12,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
 
-USER_ROLES = ("student",)
+USER_ROLES = ("student", "admin")
 
 
 class User(Base):
