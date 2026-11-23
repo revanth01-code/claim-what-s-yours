@@ -1,0 +1,42 @@
+{
+  "sources": [
+    {
+      "name": "Telangana ePASS Postmatric Portal",
+      "organization": "Welfare Departments, Government of Telangana",
+      "base_url": "https://telanganaepass.cgg.gov.in/",
+      "resource_urls": [
+        "https://telanganaepass.cgg.gov.in/Scholarships.do",
+        "https://telanganaepass.cgg.gov.in/epassonlinelinks.jsp"
+      ],
+      "source_type": "portal",
+      "access_method": "GET",
+      "check_interval_hours": 12,
+      "reliability_score": 1.0
+    },
+    {
+      "name": "Telangana Chief Minister Overseas Portal",
+      "organization": "Minorities Welfare & Backward Classes Welfare, Telangana",
+      "base_url": "https://telanganaepass.cgg.gov.in/",
+      "resource_urls": [
+        "https://telanganaepass.cgg.gov.in/OverseasLinks.do"
+      ],
+      "source_type": "portal",
+      "access_method": "GET",
+      "check_interval_hours": 24,
+      "reliability_score": 1.0
+    },
+    {
+      "name": "National Scholarship Portal (NSP)",
+      "organization": "Ministry of Electronics & Information Technology, Government of India",
+      "base_url": "https://scholarships.gov.in/",
+      "resource_urls": [
+        "https://scholarships.gov.in/All-Scholarships",
+        "https://scholarships.gov.in/student-announcements"
+      ],
+      "source_type": "portal",
+      "access_method": "GET",
+      "check_interval_hours": 12,
+      "reliability_score": 1.0
+    }
+  ]
+}

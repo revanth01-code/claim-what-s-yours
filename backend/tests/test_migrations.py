@@ -28,6 +28,7 @@ PROTECT_AUDIT_LOGS_REVISION = "6d7e8f9a0b1c"
 STUDENT_PROFILES_REVISION = "7a8b9c0d1e2f"
 APPLICATION_RECORDS_REVISION = "8b9c0d1e2f3a"
 SAVED_AND_NOTIFICATIONS_REVISION = "9c0d1e2f3a4b"
+SOURCES_AND_INGESTION_REVISION = "a1b2c3d4e5f6"
 
 
 def test_migration_revision_exists_and_is_unique() -> None:
@@ -36,7 +37,7 @@ def test_migration_revision_exists_and_is_unique() -> None:
     revisions = list(scripts.walk_revisions())
 
     assert revisions
-    assert len(revisions) == 8
+    assert len(revisions) == 9
     assert {revision.revision for revision in revisions} == {
         INITIAL_REVISION,
         USERS_REVISION,
@@ -46,6 +47,7 @@ def test_migration_revision_exists_and_is_unique() -> None:
         STUDENT_PROFILES_REVISION,
         APPLICATION_RECORDS_REVISION,
         SAVED_AND_NOTIFICATIONS_REVISION,
+        SOURCES_AND_INGESTION_REVISION,
     }
 
 
@@ -65,7 +67,7 @@ def test_migration_script_contains_upgrade_and_downgrade() -> None:
     versions = BACKEND_ROOT / "alembic" / "versions"
     revision_files = list(versions.glob("*.py"))
 
-    assert len(revision_files) == 8
+    assert len(revision_files) == 9
     for revision_file in revision_files:
         source = revision_file.read_text(encoding="utf-8")
         assert "def upgrade()" in source

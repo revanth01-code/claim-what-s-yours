@@ -27,6 +27,26 @@ class Settings(BaseSettings):
     firebase_project_id: str | None = None
     firebase_credentials_path: str | None = None
 
+    # LLM Provider Configuration (Groq only)
+    # Supported providers: "groq", "none"
+    llm_provider: Literal["groq", "none"] = "groq"
+    llm_api_key: SecretStr | None = None
+    llm_model: str = "openai/gpt-oss-120b"
+    llm_timeout_seconds: int = Field(default=30, ge=1, le=120)
+    llm_max_output_tokens: int = Field(default=1024, ge=50, le=4096)
+
+    # Ingestion & Ingestion Scheduler Settings
+    ingestion_secret: SecretStr | None = None
+    ingestion_interval_hours: int = Field(default=12, ge=1, le=168)
+
+    @field_validator("llm_model", mode="before")
+    @classmethod
+    def _validate_llm_model(cls, value: str | None) -> str:
+        """Fallback to default model if empty string provided."""
+        if not value or not str(value).strip():
+            return "openai/gpt-oss-120b"
+        return str(value).strip()
+
     @field_validator("api_prefix")
     @classmethod
     def _validate_api_prefix(cls, value: str) -> str:

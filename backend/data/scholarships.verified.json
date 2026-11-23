@@ -1,0 +1,297 @@
+{
+  "scholarships": [
+    {
+      "name": "Telangana ePASS Postmatric Scholarships (RTF & MTF)",
+      "slug": "telangana-epass-postmatric-scholarships",
+      "description": "Comprehensive tuition fee reimbursement (RTF) and maintenance fee (MTF) for eligible students of Telangana pursuing Intermediate, ITI, Polytechnic, Undergraduate, Postgraduate, and Professional degree courses.",
+      "administering_authority": "Welfare Departments, Government of Telangana",
+      "category": "other",
+      "benefits": {
+        "reimbursement_tuition_fee": "Up to 100% sanctioned tuition fee for eligible colleges",
+        "maintenance_fee_hosteller": "₹1,400 to ₹1,500 per month maintenance allowance",
+        "maintenance_fee_day_scholar": "₹650 to ₹750 per month maintenance allowance"
+      },
+      "application_url": "https://telanganaepass.cgg.gov.in/Scholarships.do",
+      "academic_years": [
+        {
+          "year": "2026-27",
+          "is_available": true,
+          "closing_date": "2027-03-31"
+        }
+      ],
+      "eligibility_criteria": [
+        {
+          "academic_year": "2026-27",
+          "education_levels": [
+            "intermediate",
+            "diploma",
+            "undergraduate",
+            "postgraduate",
+            "professional"
+          ],
+          "maximum_family_income": 200000.0,
+          "domicile_state": "Telangana",
+          "categories": [
+            "sc",
+            "st",
+            "bc",
+            "ebc",
+            "minority",
+            "disability"
+          ],
+          "is_verified": false,
+          "source_reference": "G.O.Ms.No.66 Social Welfare (Edn.2) Dept and Telangana ePASS Portal"
+        }
+      ],
+      "sources": [
+        {
+          "source_url": "https://telanganaepass.cgg.gov.in/Scholarships.do",
+          "authority": "Telangana ePASS",
+          "source_type": "government_portal",
+          "title": "Telangana ePASS Postmatric Notification",
+          "verification_status": "pending_verification"
+        },
+        {
+          "source_url": "https://telanganaepass.cgg.gov.in/epassonlinelinks.jsp",
+          "authority": "Telangana ePASS",
+          "source_type": "government_portal",
+          "title": "Telangana ePASS Official Services Portal",
+          "verification_status": "pending_verification"
+        }
+      ]
+    },
+    {
+      "name": "Telangana ePASS Pre-Matric Scholarship Scheme",
+      "slug": "telangana-epass-pre-matric-scholarship",
+      "description": "Financial assistance to SC, ST, BC, and disabled students studying in classes 9 and 10 in government recognized schools across Telangana.",
+      "administering_authority": "Scheduled Castes Development & BC Welfare Departments, Government of Telangana",
+      "category": "sc",
+      "benefits": {
+        "annual_grant": "₹3,500 to ₹4,500 per annum for stationery, books, and educational requisites"
+      },
+      "application_url": "https://telanganaepass.cgg.gov.in/",
+      "academic_years": [
+        {
+          "year": "2026-27",
+          "is_available": true,
+          "closing_date": "2027-01-31"
+        }
+      ],
+      "eligibility_criteria": [
+        {
+          "academic_year": "2026-27",
+          "education_levels": [
+            "class_9",
+            "class_10",
+            "school"
+          ],
+          "maximum_family_income": 200000.0,
+          "domicile_state": "Telangana",
+          "categories": [
+            "sc",
+            "st",
+            "bc",
+            "disability"
+          ],
+          "is_verified": false,
+          "source_reference": "Telangana ePASS Pre-Matric Welfare Directive"
+        }
+      ],
+      "sources": [
+        {
+          "source_url": "https://telanganaepass.cgg.gov.in/",
+          "authority": "Telangana ePASS",
+          "source_type": "government_portal",
+          "title": "Telangana ePASS Official Portal",
+          "verification_status": "pending_verification"
+        }
+      ]
+    },
+    {
+      "name": "Telangana Chief Minister Overseas Scholarship Scheme",
+      "slug": "telangana-chief-ministers-overseas-scholarship-scheme",
+      "description": "Financial grant awarded to meritorious SC, ST, BC, and Minority graduates from Telangana to pursue higher education (Master's and Ph.D.) abroad in top-ranking accredited international institutions.",
+      "administering_authority": "Minorities & Welfare Departments, Government of Telangana",
+      "category": "minority",
+      "benefits": {
+        "overseas_grant": "Up to ₹20,00,000 towards tuition fees and living expenses",
+        "travel": "One-way economy international airfare"
+      },
+      "application_url": "https://telanganaepass.cgg.gov.in/OverseasLinks.do",
+      "academic_years": [
+        {
+          "year": "2026-27",
+          "is_available": true,
+          "closing_date": "2026-12-31"
+        }
+      ],
+      "eligibility_criteria": [
+        {
+          "academic_year": "2026-27",
+          "education_levels": [
+            "postgraduate",
+            "doctorate"
+          ],
+          "minimum_academic_percentage": 60.0,
+          "maximum_family_income": 500000.0,
+          "domicile_state": "Telangana",
+          "categories": [
+            "sc",
+            "st",
+            "bc",
+            "minority"
+          ],
+          "is_verified": false,
+          "source_reference": "Telangana Overseas Scholarship Rules & Guidelines"
+        }
+      ],
+      "sources": [
+        {
+          "source_url": "https://telanganaepass.cgg.gov.in/OverseasLinks.do",
+          "authority": "Telangana ePASS",
+          "source_type": "government_portal",
+          "title": "Telangana Overseas Scholarship Portal",
+          "verification_status": "pending_verification"
+        }
+      ]
+    },
+    {
+      "name": "Pradhan Mantri Uchchatar Shiksha Protsahan (PM-USP) Central Sector Scheme of Scholarship for College and University Students (CSSS)",
+      "slug": "pm-usp-central-sector-scheme-scholarship-college-university-students",
+      "description": "Central sector scholarship provided by the Department of Higher Education, Ministry of Education, to support financially challenged, high-performing students pursuing undergraduate and postgraduate degrees in recognized Indian universities.",
+      "administering_authority": "Department of Higher Education, Ministry of Education, Government of India",
+      "category": "merit",
+      "benefits": {
+        "graduation_benefit": "₹12,000 per annum for the first 3 years of undergraduate study",
+        "post_graduation_benefit": "₹20,000 per annum for postgraduate degree courses"
+      },
+      "application_url": "https://scholarships.gov.in/All-Scholarships",
+      "academic_years": [
+        {
+          "year": "2026-27",
+          "is_available": true,
+          "closing_date": "2026-11-30"
+        }
+      ],
+      "eligibility_criteria": [
+        {
+          "academic_year": "2026-27",
+          "education_levels": [
+            "undergraduate",
+            "postgraduate"
+          ],
+          "minimum_academic_percentage": 80.0,
+          "maximum_family_income": 450000.0,
+          "is_verified": false,
+          "source_reference": "National Scholarship Portal & Department of Higher Education Gazette"
+        }
+      ],
+      "sources": [
+        {
+          "source_url": "https://scholarships.gov.in/All-Scholarships",
+          "authority": "National Scholarship Portal",
+          "source_type": "government_portal",
+          "title": "National Scholarship Portal Central Schemes",
+          "verification_status": "pending_verification"
+        },
+        {
+          "source_url": "https://scholarships.gov.in/student-announcements",
+          "authority": "National Scholarship Portal",
+          "source_type": "government_portal",
+          "title": "NSP Official Student Announcements",
+          "verification_status": "pending_verification"
+        }
+      ]
+    },
+    {
+      "name": "PM YASASVI Central Sector Scheme Of Top Class Education In Schools & Colleges",
+      "slug": "pm-yasasvi-top-class-education-schools-obc-ebc-dnt",
+      "description": "Scholarship awarded by the Ministry of Social Justice and Empowerment for OBC, EBC, and DNT students studying in designated premier schools and top-tier institutions across India.",
+      "administering_authority": "Ministry of Social Justice and Empowerment, Government of India",
+      "category": "obc",
+      "benefits": {
+        "tuition_coverage": "Full tuition fees up to ₹1,25,000 per annum for school students and ₹2,00,000 for higher education",
+        "living_allowance": "Monthly living allowance and computer equipment assistance"
+      },
+      "application_url": "https://scholarships.gov.in/All-Scholarships",
+      "academic_years": [
+        {
+          "year": "2026-27",
+          "is_available": true,
+          "closing_date": "2026-12-31"
+        }
+      ],
+      "eligibility_criteria": [
+        {
+          "academic_year": "2026-27",
+          "education_levels": [
+            "class_9",
+            "class_11",
+            "undergraduate"
+          ],
+          "maximum_family_income": 250000.0,
+          "categories": [
+            "obc",
+            "ebc",
+            "other"
+          ],
+          "is_verified": false,
+          "source_reference": "Ministry of Social Justice and Empowerment Notification"
+        }
+      ],
+      "sources": [
+        {
+          "source_url": "https://scholarships.gov.in/All-Scholarships",
+          "authority": "National Scholarship Portal",
+          "source_type": "government_portal",
+          "title": "NSP Schemes Directory",
+          "verification_status": "pending_verification"
+        }
+      ]
+    },
+    {
+      "name": "Post Matric Scholarship for Students with Disabilities",
+      "slug": "post-matric-scholarship-students-with-disabilities",
+      "description": "Department of Empowerment of Persons with Disabilities scheme to assist disabled students pursuing post-matric and higher studies in recognized institutions.",
+      "administering_authority": "Department of Empowerment of Persons with Disabilities, Government of India",
+      "category": "disability",
+      "benefits": {
+        "maintenance_allowance": "₹900 to ₹1,600 per month depending on course level and day scholar/hosteller status",
+        "book_grant": "₹1,500 per annum book grant",
+        "disability_allowance": "Reader / escort / transport allowance"
+      },
+      "application_url": "https://scholarships.gov.in/All-Scholarships",
+      "academic_years": [
+        {
+          "year": "2026-27",
+          "is_available": true,
+          "closing_date": "2026-12-31"
+        }
+      ],
+      "eligibility_criteria": [
+        {
+          "academic_year": "2026-27",
+          "education_levels": [
+            "intermediate",
+            "diploma",
+            "undergraduate",
+            "postgraduate"
+          ],
+          "disability_required": true,
+          "maximum_family_income": 250000.0,
+          "is_verified": false,
+          "source_reference": "DEPwD Official Guidelines and National Scholarship Portal"
+        }
+      ],
+      "sources": [
+        {
+          "source_url": "https://scholarships.gov.in/All-Scholarships",
+          "authority": "National Scholarship Portal",
+          "source_type": "government_portal",
+          "title": "National Scholarship Portal - DEPwD Schemes",
+          "verification_status": "pending_verification"
+        }
+      ]
+    }
+  ]
+}

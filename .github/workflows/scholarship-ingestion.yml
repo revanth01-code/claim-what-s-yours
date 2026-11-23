@@ -1,0 +1,36 @@
+name: Scheduled Scholarship Ingestion
+
+on:
+  schedule:
+    # Runs twice daily at 00:00 and 12:00 UTC (every 12 hours)
+    - cron: '0 0,12 * * *'
+  workflow_dispatch:
+
+jobs:
+  ingest:
+    name: Run Official Source Discovery & Ingestion
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Ingestion Webhook on Production Backend
+        env:
+          INGESTION_SECRET: ${{ secrets.CWY_INGESTION_SECRET }}
+          BACKEND_URL: "https://claim-what-s-yours-3qh1.onrender.com"
+        run: |
+          echo "Triggering scheduled scholarship ingestion on $BACKEND_URL..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-Ingestion-Secret: $INGESTION_SECRET" \
+            "$BACKEND_URL/api/v1/admin/ingestion/webhook-trigger")
+
+          HTTP_STATUS=$(echo "$RESPONSE" | tail -n 1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "HTTP Response Status: $HTTP_STATUS"
+          echo "Payload: $BODY"
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "Successfully executed scheduled ingestion."
+          else
+            echo "Ingestion failed or returned non-2xx status code."
+            exit 1
+          fi

@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db_session
+from app.modules.ai.llm_client import LLMClient
 from app.modules.ai.service import AIGuidanceService
 from app.modules.auth.dependencies import get_current_user
 from app.modules.profiles.models import StudentProfile
@@ -14,6 +15,13 @@ from app.modules.users.models import User
 from app.schemas.ai import AIGuidanceRequest, AIGuidanceResponse
 
 router = APIRouter(prefix="/ai", tags=["ai"])
+
+
+@router.get("/status")
+def get_ai_status() -> dict[str, object]:
+    """Check AI provider configuration and live connectivity without exposing keys."""
+    client = LLMClient()
+    return client.validate_connectivity()
 
 
 @router.post("/guidance", response_model=AIGuidanceResponse)

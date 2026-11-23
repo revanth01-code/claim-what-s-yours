@@ -127,8 +127,11 @@ class ScholarshipImporter:
             summary.skipped += int(not changed)
 
         years = self._upsert_years(scholarship, record, summary)
+        self.session.flush()
         self._upsert_criteria(scholarship, record, years, summary)
+        self.session.flush()
         self._upsert_sources(scholarship, record, summary)
+        self.session.flush()
 
     def _scholarship_is_protected(self, scholarship: Scholarship) -> bool:
         return any(
